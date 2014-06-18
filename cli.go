@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -12,6 +13,7 @@ type CliCommand interface {
 	GetShortName() string
 	GetDescription() string
 	GetUsageLine() string
+	GetFlag() flag.FlagSet
 
 	Usage()
 	Run() error
@@ -68,6 +70,11 @@ func (cl *Cli) Handle() error {
 		return nil
 	}
 	for _, cmd := range cl.commands {
+
+        f := cmd.GetFlag()
+        f.Usage = func() { f.PrintDefaults(); os.Exit(1) }
+		f.Parse(cl.args[1:])
+
 		switch cl.args[0] {
 		case cmd.GetName():
 			fallthrough
@@ -99,6 +106,7 @@ type Command struct {
 	ShortName   string
 	Description string
 	UsageLine   string
+	Flag        flag.FlagSet
 }
 
 func (c Command) GetName() string {
@@ -115,6 +123,10 @@ func (c Command) GetDescription() string {
 
 func (c Command) GetUsageLine() string {
 	return c.UsageLine
+}
+
+func (c Command) GetFlag() flag.FlagSet {
+	return c.Flag
 }
 
 func (c Command) Usage() {
