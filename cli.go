@@ -13,7 +13,7 @@ type CliCommand interface {
 	GetShortName() string
 	GetDescription() string
 	GetUsageLine() string
-	GetFlag() flag.FlagSet
+	getFlag() flag.FlagSet
 
 	Usage()
 	Run() error
@@ -34,8 +34,10 @@ func NewCli(name string, description string, args []string) *Cli {
 	}
 }
 
-func (cl *Cli) AddCmd(cmd CliCommand) {
-	cl.commands = append(cl.commands, cmd)
+func (cl *Cli) AddCmds(cmds []CliCommand) {
+	for _, cmd := range cmds {
+		cl.commands = append(cl.commands, cmd)
+	}
 }
 
 func (cl *Cli) Usage() {
@@ -71,8 +73,8 @@ func (cl *Cli) Handle() error {
 	}
 	for _, cmd := range cl.commands {
 
-        f := cmd.GetFlag()
-        f.Usage = func() { f.PrintDefaults(); os.Exit(1) }
+		f := cmd.getFlag()
+		f.Usage = func() { cmd.Usage(); os.Exit(1) }
 		f.Parse(cl.args[1:])
 
 		switch cl.args[0] {
@@ -125,7 +127,7 @@ func (c Command) GetUsageLine() string {
 	return c.UsageLine
 }
 
-func (c Command) GetFlag() flag.FlagSet {
+func (c Command) getFlag() flag.FlagSet {
 	return c.Flag
 }
 
