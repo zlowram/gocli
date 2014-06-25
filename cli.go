@@ -12,6 +12,7 @@ import (
 	"text/template"
 )
 
+// The CliCommand interface defines the methods that a Command must implement. 
 type CliCommand interface {
 	GetName() string
 	GetShortName() string
@@ -23,6 +24,8 @@ type CliCommand interface {
 	Run() error
 }
 
+// Cli represents the whole CLI program, which includes the name, description,
+// commands and arguments.
 type Cli struct {
 	commands    []CliCommand
 	args        []string
@@ -30,6 +33,8 @@ type Cli struct {
 	description string
 }
 
+// NewCli creates and returns a new Cli. In order to create a new CLI program,
+// this function should be called in the first place.
 func NewCli(name string, description string, args []string) *Cli {
 	return &Cli{
 		name:        name,
@@ -38,12 +43,15 @@ func NewCli(name string, description string, args []string) *Cli {
 	}
 }
 
+// AddCmds add commands to the current Cli. Note that all commands must
+// implement the CliCommand interface.
 func (cl *Cli) AddCmds(cmds []CliCommand) {
 	for _, cmd := range cmds {
 		cl.commands = append(cl.commands, cmd)
 	}
 }
 
+// Usage prints the help text for the current Cli.
 func (cl *Cli) Usage() {
 	clTemplate := struct {
 		Commands    []CliCommand
@@ -69,7 +77,8 @@ const usageLine = `{{.Name}} - {{.Description}}
     Use "{{.Name}} help [command]" for more information about a command.
 
 `
-
+// Handle is the engine of CLI. It handles the arguments given to the program
+// and calls the corresponding command Run or Usage methods.
 func (cl *Cli) Handle() error {
 	if len(cl.args) < 1 || len(cl.args) == 1 && cl.args[0] == "help" {
 		cl.Usage()
@@ -106,7 +115,8 @@ const unknownCmdLine = `unknown command
 Use "{{.}} help" for usage information.
 
 `
-
+// Command represents a command of the cli program. It includes the name,
+// short name, description, usage and flags.
 type Command struct {
 	Name        string
 	ShortName   string
@@ -115,18 +125,22 @@ type Command struct {
 	Flag        flag.FlagSet
 }
 
+// GetName returns the name of the command.
 func (c Command) GetName() string {
 	return c.Name
 }
 
+// GetName returns the short name of the command.
 func (c Command) GetShortName() string {
 	return c.ShortName
 }
 
+// GetDescription returns the description of the command.
 func (c Command) GetDescription() string {
 	return c.Description
 }
 
+// GetUsageLine returns the usage text of the command.
 func (c Command) GetUsageLine() string {
 	return c.UsageLine
 }
@@ -135,6 +149,7 @@ func (c Command) getFlag() flag.FlagSet {
 	return c.Flag
 }
 
+// Usage prints the usage text of the command to the stdout.
 func (c Command) Usage() {
 	fmt.Fprintf(os.Stderr, "usage: %s\n", c.GetUsageLine())
 }
