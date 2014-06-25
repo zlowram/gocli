@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/zlowram/cli"
+	"github.com/zlowram/gocli"
 )
 
 type testCmd1 struct {
 	str string
-	cli.Command
+	gocli.Command
 
 	flag1 *string
 	flag2 *bool
@@ -34,7 +34,7 @@ func (tc *testCmd1) Run() error {
 }
 
 type testCmd2 struct {
-	cli.Command
+	gocli.Command
 }
 
 func (tc *testCmd2) Run() error {
@@ -44,14 +44,14 @@ func (tc *testCmd2) Run() error {
 
 func main() {
 	flag.Parse()
-	c := cli.NewCli(
+	c := gocli.NewCli(
 		"TestCli",
 		"Short description for this cli",
 		flag.Args(),
 	)
 	cmd1 := testCmd1{
 		str: "a very long and imaginative string",
-		Command: cli.Command{
+		Command: gocli.Command{
 			Name:        "subcmd1",
 			ShortName:   "s1",
 			Description: "short description of the subcmd1",
@@ -68,14 +68,14 @@ func main() {
 	cmd1.flag1 = cmd1.Flag.String("f", "default", "")
 	cmd1.flag2 = cmd1.Flag.Bool("s", false, "")
 	cmd2 := testCmd2{
-		Command: cli.Command{
+		Command: gocli.Command{
 			Name:        "subcmd2",
 			ShortName:   "s2",
 			Description: "short description of the subcmd2",
 			UsageLine: `TestCli subcmd2 [options] {args}
             `},
 	}
-	c.AddCmds([]cli.CliCommand{
+	c.AddCmds([]gocli.CliCommand{
 		&cmd1,
 		&cmd2,
 	})
