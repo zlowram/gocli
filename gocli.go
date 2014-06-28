@@ -18,7 +18,7 @@ type CliCommand interface {
 	GetShortName() string
 	GetDescription() string
 	GetUsageLine() string
-	getFlag() flag.FlagSet
+	getFlag() *flag.FlagSet
 
 	Usage()
 	Run() error
@@ -145,8 +145,8 @@ func (c Command) GetUsageLine() string {
 	return c.UsageLine
 }
 
-func (c Command) getFlag() flag.FlagSet {
-	return c.Flag
+func (c *Command) getFlag() *flag.FlagSet {
+	return &c.Flag
 }
 
 // Usage prints the usage text of the command to the stdout.

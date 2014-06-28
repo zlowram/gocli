@@ -21,6 +21,11 @@ type testCmd1 struct {
 }
 
 func (tc *testCmd1) Run() error {
+    if (tc.Flag.NArg() < 2) {
+        tc.Usage()
+        return nil
+    }
+
 	fmt.Println("This is the Run method for the subcmd1 command, with flags and args")
 
 	fmt.Println("The value of the flag -f is:", *tc.flag1)
@@ -30,6 +35,8 @@ func (tc *testCmd1) Run() error {
 		fmt.Println("The bool flag -s is not set")
 	}
 	fmt.Println("The str value is:", tc.str)
+    fmt.Println("The first argument value is:",tc.Flag.Arg(0))
+    fmt.Println("The second argument value is:",tc.Flag.Arg(1))
 	return nil
 }
 
