@@ -85,6 +85,9 @@ func (cl *Cli) Handle() error {
 		return nil
 	}
 	for _, cmd := range cl.commands {
+        if cl.args[0] != cmd.GetName() && cl.args[0] != cmd.GetShortName() && cl.args[0] != "help" {
+            continue
+        }
 
 		f := cmd.getFlag()
 		f.Usage = func() { cmd.Usage(); os.Exit(1) }
@@ -100,7 +103,7 @@ func (cl *Cli) Handle() error {
 				cmd.Usage()
 				return nil
 			}
-		}
+        }
 	}
 	if err := unknownCmdTemplate.Execute(os.Stdout, cl.name); err != nil {
 		log.Fatalln(err)
