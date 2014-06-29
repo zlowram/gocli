@@ -12,7 +12,7 @@ import (
 	"text/template"
 )
 
-// The CliCommand interface defines the methods that a Command must implement. 
+// The CliCommand interface defines the methods that a Command must implement.
 type CliCommand interface {
 	GetName() string
 	GetShortName() string
@@ -77,6 +77,7 @@ const usageLine = `{{.Name}} - {{.Description}}
     Use "{{.Name}} help [command]" for more information about a command.
 
 `
+
 // Handle is the engine of CLI. It handles the arguments given to the program
 // and calls the corresponding command Run or Usage methods.
 func (cl *Cli) Handle() error {
@@ -85,9 +86,9 @@ func (cl *Cli) Handle() error {
 		return nil
 	}
 	for _, cmd := range cl.commands {
-        if cl.args[0] != cmd.GetName() && cl.args[0] != cmd.GetShortName() && cl.args[0] != "help" {
-            continue
-        }
+		if cl.args[0] != cmd.GetName() && cl.args[0] != cmd.GetShortName() && cl.args[0] != "help" {
+			continue
+		}
 
 		f := cmd.getFlag()
 		f.Usage = func() { cmd.Usage(); os.Exit(1) }
@@ -103,7 +104,7 @@ func (cl *Cli) Handle() error {
 				cmd.Usage()
 				return nil
 			}
-        }
+		}
 	}
 	if err := unknownCmdTemplate.Execute(os.Stdout, cl.name); err != nil {
 		log.Fatalln(err)
@@ -118,6 +119,7 @@ const unknownCmdLine = `unknown command
 Use "{{.}} help" for usage information.
 
 `
+
 // Command represents a command of the cli program. It includes the name,
 // short name, description, usage and flags.
 type Command struct {
