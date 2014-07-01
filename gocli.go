@@ -12,22 +12,10 @@ import (
 	"text/template"
 )
 
-// The CliCommand interface defines the methods that a Command must implement.
-type CliCommand interface {
-	GetName() string
-	GetShortName() string
-	GetDescription() string
-	GetUsageLine() string
-	getFlag() *flag.FlagSet
-
-	Usage()
-	Run() error
-}
-
 // Cli represents the whole CLI program, which includes the name, description,
 // commands and arguments.
 type Cli struct {
-	commands    []CliCommand
+	Commands    []Command
 	args        []string
 	name        string
 	description string
@@ -43,21 +31,13 @@ func NewCli(name string, description string, args []string) *Cli {
 	}
 }
 
-// AddCmds add commands to the current Cli. Note that all commands must
-// implement the CliCommand interface.
-func (cl *Cli) AddCmds(cmds []CliCommand) {
-	for _, cmd := range cmds {
-		cl.commands = append(cl.commands, cmd)
-	}
-}
-
 // Usage prints the help text for the current Cli.
 func (cl *Cli) Usage() {
 	clTemplate := struct {
-		Commands    []CliCommand
+		Commands    []Command
 		Name        string
 		Description string
-	}{cl.commands, cl.name, cl.description}
+	}{cl.Commands, cl.name, cl.description}
 
 	if err := usageTemplate.Execute(os.Stdout, clTemplate); err != nil {
 		log.Fatalln(err)
@@ -72,7 +52,7 @@ const usageLine = `{{.Name}} - {{.Description}}
         command [options] {arguments}
 
     The commands are:
-        {{range .Commands}} {{.GetName}}, {{.GetShortName}}     {{.GetDescription}}
+        {{range .Commands}} {{.Name}}, {{.ShortName}}     {{.Description}}
         {{end}}
     Use "{{.Name}} help [command]" for more information about a command.
 
@@ -85,22 +65,22 @@ func (cl *Cli) Handle() error {
 		cl.Usage()
 		return nil
 	}
-	for _, cmd := range cl.commands {
-		if cl.args[0] != cmd.GetName() && cl.args[0] != cmd.GetShortName() && cl.args[0] != "help" {
+	for _, cmd := range cl.Commands {
+
+		if cl.args[0] != cmd.Name && cl.args[0] != cmd.ShortName && cl.args[0] != "help" {
 			continue
 		}
 
-		f := cmd.getFlag()
-		f.Usage = func() { cmd.Usage(); os.Exit(1) }
-		f.Parse(cl.args[1:])
+		cmd.Flag.Usage = func() { cmd.Usage(); os.Exit(1) }
+		cmd.Flag.Parse(cl.args[1:])
 
 		switch cl.args[0] {
-		case cmd.GetName():
+		case cmd.Name:
 			fallthrough
-		case cmd.GetShortName():
-			return cmd.Run()
+		case cmd.ShortName:
+			return cmd.Run(cmd)
 		case "help":
-			if cmd.GetName() == cl.args[1] || cmd.GetShortName() == cl.args[1] {
+			if cmd.Name == cl.args[1] || cmd.ShortName == cl.args[1] {
 				cmd.Usage()
 				return nil
 			}
@@ -128,33 +108,10 @@ type Command struct {
 	Description string
 	UsageLine   string
 	Flag        flag.FlagSet
-}
-
-// GetName returns the name of the command.
-func (c Command) GetName() string {
-	return c.Name
-}
-
-// GetName returns the short name of the command.
-func (c Command) GetShortName() string {
-	return c.ShortName
-}
-
-// GetDescription returns the description of the command.
-func (c Command) GetDescription() string {
-	return c.Description
-}
-
-// GetUsageLine returns the usage text of the command.
-func (c Command) GetUsageLine() string {
-	return c.UsageLine
-}
-
-func (c *Command) getFlag() *flag.FlagSet {
-	return &c.Flag
+	Run         func(Command) error
 }
 
 // Usage prints the usage text of the command to the stdout.
 func (c Command) Usage() {
-	fmt.Fprintf(os.Stderr, "usage: %s\n", c.GetUsageLine())
+	fmt.Fprintf(os.Stderr, "usage: %s\n", c.UsageLine)
 }

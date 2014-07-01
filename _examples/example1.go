@@ -12,15 +12,7 @@ import (
 	"github.com/zlowram/gocli"
 )
 
-type testCmd1 struct {
-	str string
-	gocli.Command
-
-	flag1 *string
-	flag2 *bool
-}
-
-func (tc *testCmd1) Run() error {
+func testCmd1Run(tc gocli.Command, flag1 string, flag2 bool, str string) error {
 	if tc.Flag.NArg() < 2 {
 		tc.Usage()
 		return nil
@@ -28,24 +20,15 @@ func (tc *testCmd1) Run() error {
 
 	fmt.Println("This is the Run method for the subcmd1 command, with flags and args")
 
-	fmt.Println("The value of the flag -f is:", *tc.flag1)
-	if *tc.flag2 {
+	fmt.Println("The value of the flag -f is:", flag1)
+	if flag2 {
 		fmt.Println("The bool flag -s is set")
 	} else {
 		fmt.Println("The bool flag -s is not set")
 	}
-	fmt.Println("The str value is:", tc.str)
+	fmt.Println("The str value is:", str)
 	fmt.Println("The first argument value is:", tc.Flag.Arg(0))
 	fmt.Println("The second argument value is:", tc.Flag.Arg(1))
-	return nil
-}
-
-type testCmd2 struct {
-	gocli.Command
-}
-
-func (tc *testCmd2) Run() error {
-	fmt.Println("This is the Run method for the subcmd2 command, with no flags and no args")
 	return nil
 }
 
@@ -56,13 +39,11 @@ func main() {
 		"Short description for this cli",
 		flag.Args(),
 	)
-	cmd1 := testCmd1{
-		str: "a very long and imaginative string",
-		Command: gocli.Command{
-			Name:        "subcmd1",
-			ShortName:   "s1",
-			Description: "short description of the subcmd1",
-			UsageLine: `TestCli subcmd1 [options] {args}
+	cmd1 := gocli.Command{
+		Name:        "subcmd1",
+		ShortName:   "s1",
+		Description: "short description of the subcmd1",
+		UsageLine: `TestCli subcmd1 [options] {args}
 
     The options are:
         -f
@@ -70,22 +51,26 @@ func main() {
         -s
             bool flag s
 
-            `},
+            `,
 	}
-	cmd1.flag1 = cmd1.Flag.String("f", "default", "")
-	cmd1.flag2 = cmd1.Flag.Bool("s", false, "")
-	cmd2 := testCmd2{
-		Command: gocli.Command{
-			Name:        "subcmd2",
-			ShortName:   "s2",
-			Description: "short description of the subcmd2",
-			UsageLine: `TestCli subcmd2 [options] {args}
-            `},
+	flag1 := cmd1.Flag.String("f", "default", "")
+	flag2 := cmd1.Flag.Bool("s", false, "")
+	cmd1.Run = func(c gocli.Command) error {
+		return testCmd1Run(c, *flag1, *flag2, "String test for Cmd1")
 	}
-	c.AddCmds([]gocli.CliCommand{
-		&cmd1,
-		&cmd2,
-	})
+
+	cmd2 := gocli.Command{
+		Name:        "subcmd2",
+		ShortName:   "s2",
+		Description: "short description of the subcmd2",
+		UsageLine: `TestCli subcmd2 [options] {args}
+            `,
+		Run: func(tc gocli.Command) error {
+			fmt.Println("This is the Run method for the subcmd2 command, with no flags and no args")
+			return nil
+		},
+	}
+	c.Commands = []gocli.Command{cmd1, cmd2}
 	if err := c.Handle(); err != nil {
 		log.Fatalln(err)
 	}
